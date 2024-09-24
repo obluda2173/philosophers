@@ -1,24 +1,19 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   ft_strdup.c                                        :+:      :+:    :+:   */
+/*   error.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/08/03 16:46:15 by erian             #+#    #+#             */
-/*   Updated: 2024/08/05 20:00:53 by erian            ###   ########.fr       */
+/*   Created: 2024/09/24 11:49:33 by erian             #+#    #+#             */
+/*   Updated: 2024/09/24 14:08:34 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "libft.h"
+#include "philosophers.h"
 
-char	*ft_strdup(const char *s1)
+void	exit_error(char *str)
 {
-	char	*p;
-
-	p = ft_calloc(ft_strlen(s1) + 1, sizeof(char));
-	if (p == NULL)
-		return (NULL);
-	ft_strlcpy(p, s1, (ft_strlen(s1) + 1));
-	return (p);
+	printf("%s", str);
+	exit(1);
 }

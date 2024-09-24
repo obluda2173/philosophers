@@ -6,18 +6,21 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/24 11:03:28 by erian             #+#    #+#             */
-/*   Updated: 2024/09/24 11:40:47 by erian            ###   ########.fr       */
+/*   Updated: 2024/09/24 15:25:54 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #ifndef PHILOSOPHERS_H
 # define PHILOSOPHERS_H
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 #include <pthread.h>
 #include <sys/time.h>
+#include <limits.h>
 
-# include "../include/Libft/libft.h"
-# include "../include/ft_printf/ft_printf.h"
+void	parse(char **av, t_table *table);
 
 typedef pthread_mutex_t t_mutex;
 typedef struct	s_table	t_table;
