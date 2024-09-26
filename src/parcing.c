@@ -6,7 +6,7 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/24 14:55:58 by erian             #+#    #+#             */
-/*   Updated: 2024/09/24 15:25:11 by erian            ###   ########.fr       */
+/*   Updated: 2024/09/26 10:55:52 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,16 +22,16 @@ static long	ft_atol(const char *str)
 	if (*str == '+')
 		str++;
 	else if (*str == '-') 
-		exit_error("Invalid number\n");
+		exit_error("Invalid number.\n");
 	if (!(*str >= '0' && *str <= '9'))
-		exit_error("Invalid number\n");
+		exit_error("Invalid number.\n");
 	while (*str >= '0' && *str <= '9')
 	{
 		result = result * 10 + (*str - '0');
 		str++;
 	}
 	if (result > INT_MAX)
-		exit_error("Too large number\n");
+		exit_error("Too large number.\n");
 	return (result);
 }
 
@@ -44,7 +44,7 @@ void	parse(char **av, t_table *table)
 	if (table->time_to_die < 6e4
 		|| table->time_to_eat < 6e4
 		|| table->time_to_sleep < 6e4)
-		exit_error("Invalid given time\n");
+		exit_error("Invalid given time.\n");
 	if (av[5])
 		table->max_meal = ft_atol(av[5]);
 	else

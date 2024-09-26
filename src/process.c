@@ -1,27 +1,36 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   philosophers.c                                     :+:      :+:    :+:   */
+/*   process.c                                          :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/09/24 11:02:19 by erian             #+#    #+#             */
-/*   Updated: 2024/09/26 10:55:56 by erian            ###   ########.fr       */
+/*   Created: 2024/09/26 14:23:52 by erian             #+#    #+#             */
+/*   Updated: 2024/09/26 14:37:12 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
-int	main(int ac, char **av)
+static void	process(void *data)
 {
-	t_table	table;
+	t_ph	*ph;
 
-	if (!(ac == 5 || ac == 6))
-	{
-		exit_error("Error input.\n");
-	}
-	parse(av, &table);
-	data_init(&table);
-	process(&table);
-	clean(&table);
+	ph = (t_ph *)data;
+	wait_all_threads(ph->table);
+	return (NULL);
+}
+
+void	start(t_table *table)
+{
+	int	i;
+
+	i = -1;
+	if (table->max_meal == 0)
+		return ;
+	else if (table->ph_nbr == 1)
+		;//to do
+	else
+		while (++i < table->ph_nbr)
+			safe_thread_handle(&table->phs[i].thread_id, process, &table->phs[i], CREATE);
 }
