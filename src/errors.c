@@ -1,18 +1,24 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   error.c                                            :+:      :+:    :+:   */
+/*   errors.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/09/24 11:49:33 by erian             #+#    #+#             */
-/*   Updated: 2024/09/24 14:08:34 by erian            ###   ########.fr       */
+/*   Created: 2024/09/27 17:57:54 by erian             #+#    #+#             */
+/*   Updated: 2024/09/27 18:15:03 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
-void	exit_error(char *str)
+void	print_return(char *str)
+{
+	printf("%s", str);
+	return (1);
+}
+
+void	print_exit(char *str)
 {
 	printf("%s", str);
 	exit(1);

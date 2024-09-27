@@ -5,62 +5,85 @@
 /*                                                    +:+ +:+         +:+     */
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/09/24 17:55:02 by erian             #+#    #+#             */
-/*   Updated: 2024/09/26 14:39:48 by erian            ###   ########.fr       */
+/*   Created: 2024/09/27 18:02:25 by erian             #+#    #+#             */
+/*   Updated: 2024/09/27 18:17:47 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#include "philosophers.c"
+#include "philosophers.h"
 
-static void	assign_forks(t_ph *ph, t_fork *forks, int i)
+static long	cstm_atoi(const char *str)
 {
-	int	ph_nbr;
+	long	result;
 
-	ph_nbr = ph->table->ph_nbr;
-	ph->r_fork = &forks[(i + 1) % ph_nbr];
-	ph->l_fork = &forks[i];
-	if (ph->id % 2)
+	result = 0;
+	while ((*str >= 9 && *str <= 13) || *str == 32)
+		str++;
+	if (*str == '+')
+		str++;
+	else if (*str == '-') 
+		print_exit("Invalid number.\n");
+	if (!(*str >= '0' && *str <= '9'))
+		print_exit("Invalid number.\n");
+	while (*str >= '0' && *str <= '9')
 	{
-		ph->r_fork = &forks[i];
-		ph->l_fork = &forks[(i + 1) % ph_nbr];
+		result = result * 10 + (*str - '0');
+		str++;
 	}
+	if (result > INT_MAX)
+		print_exit("Too large number.\n");
+	return (result);
+}
+long	get_current_time(void)
+{
+	struct timeval time;
+	
+	gettimeofday(&time, NULL);
+	return((time.tv_sec * 1e3) + (time.tv_usec / 1e3));
 }
 
-static void	ph_init(t_table *table)
-{
-	int		i;
-	t_ph	*ph;
-
-	i = -1;
-	while (++i < table->ph_nbr)
-	{
-		ph = table->phs + i;
-		ph->id = i + 1;
-		ph->full = 0;
-		ph->meal_counter = 0;
-		ph->table = table;
-		assign_forks(ph, table->forks, i);
-	}
-}
-
-void	data_init(t_table *table)
+int	init_philosophers(t_data *data)
 {
 	int	i;
 
+	data->philosophers = malloc(sizeof(t_philosopher) * data->ph_nbr);
+	if (!data->philosophers)
+		return (1);
 	i = -1;
-	table->time_end = 0;
-	table->threads_ready = 0;
-	table->phs = malloc(sizeof(t_ph) * table->ph_nbr);
-	safe_mutex_handle(table->table_mtx, INIT);
-	if (!table->phs)
-		exit_error("Philosophers allocation error.\n");
-	table->forks = malloc(sizeof(t_fork) * table->ph_nbr);
-	if (!table->forks)
-		exit_error("Forks allocation error.\n");
-	while (++i < table->ph_nbr)
+	while (++i < data->ph_nbr)
 	{
-		safe_mutex_handle(&table->forks[i].fork, INIT);
-		table->forks[i].fork_id = i;
+		data->philosophers[i].id = i + 1;
+		data->philosophers[i].meals = 0;
+		data->philosophers[i].last_meal_time = get_current_time();
 	}
-	ph_init(table);
+	return (0);
+}
+
+int	init_forks(t_data *data)
+{
+	int	i;
+
+	data->forks = malloc(sizeof(pthread_mutex_t) * data->ph_nbr);
+	if (!data->forks)
+		return (1);
+	i = -1;
+	while (++i < data->ph_nbr)
+		if (pthread_mutex_init(&data->forks[i], NULL))
+			return (1);
+	return (0);
+}
+
+int	init_data(t_data *data, int ac, char **av)
+{
+	if (ac < 5 || ac > 6)
+		return (1);
+	data->ph_nbr = (int)cstm_atoi(av[1]);
+	data->time_to_die = cstm_atoi(av[2]);
+	data->time_to_eat = cstm_atoi(av[3]);
+	data->time_to_sleep = cstm_atoi(av[4]);
+	if (data->time_to_die <= 0 || data->time_to_eat <= 0 || data->time_to_sleep <= 0)
+		return (1);
+	if (init_forks(data) || init_philosophers(data))
+		return (1);
+	return (0);
 }
