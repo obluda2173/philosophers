@@ -6,7 +6,7 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/24 11:02:19 by erian             #+#    #+#             */
-/*   Updated: 2024/09/28 10:26:36 by erian            ###   ########.fr       */
+/*   Updated: 2024/09/28 18:21:05 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,26 +23,51 @@ void	clean_up(t_data *data)
 	free(data->philosophers);
 }
 
+static int	create_threads(t_data *data, t_philo_args *philo_args)
+{
+	int	i;
+
+	i = -1;
+	while (++i < data->ph_nbr)
+	{
+		philo_args[i].philo = &data->philosophers[i];
+		philo_args[i].data = data;
+		if (pthread_create(&data->philosophers[i].thread, NULL, philosopher_routine, &philo_args[i]))
+		{
+			while (--i >= 0)
+				pthread_join(data->philosophers[i].thread, NULL);
+			return (1);
+		}
+	}
+	return (0);
+}
+
+static int	join_threads(t_data *data)
+{
+	int	i;
+
+	i = -1;
+	while (++i < data->ph_nbr)
+		if (pthread_join(data->philosophers[i].thread, NULL))
+			return (1);
+	return (0);
+}
+
 int	main(int ac, char **av)
 {
 	t_data	data;
-	int		i;
+	t_philo_args	*philo_args;
 
 	if (init_data(&data, ac, av))
-		print_exit(NULL, "Error initializing data\n");
-	i = -1;
-	while (++i < data.ph_nbr)
-	{
-		if (pthread_create(&data.philosophers[i].thread, NULL, philosopher_routine, &data.philosophers[i]))
-		{
-			while (--i >= 0)
-				pthread_join(data.philosophers[i].thread, NULL);
-			print_exit(data, "Error creating thread for philosopher\n");
-		}
-	}
-	i = -1;
-	while (++i < data.ph_nbr)
-		if (pthread_join(data.philosophers[i].thread, NULL))
-			print_exit(data, "Error joining thread for philosopher\n");
+		print_exit(NULL, "Error initializing data.\n");
+	philo_args = malloc(sizeof(t_philo_args) * data.ph_nbr);
+	if (!philo_args)
+		print_exit(&data, "Error allocating memory\n");
+	if (create_threads(&data, philo_args))
+		print_exit(&data, "Error creating thread for philosopher\n");
+	if (join_threads(&data))
+		print_exit(&data, "Error joining thread for philosopher\n");
 	clean_up(&data);
+	free(philo_args);
+	return (0);
 }

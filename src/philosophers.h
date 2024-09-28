@@ -6,7 +6,7 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/24 11:03:28 by erian             #+#    #+#             */
-/*   Updated: 2024/09/28 10:18:24 by erian            ###   ########.fr       */
+/*   Updated: 2024/09/28 15:56:28 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,11 +20,6 @@
 #include <sys/time.h>
 #include <limits.h>
 #include <errno.h>
-
-void	print_return(char *str);
-void	print_exit(t_data *data, char *str);
-void	clean_up(t_data *data);
-int		main(int ac, char **av);
 
 typedef	struct	s_philosopher
 {
@@ -40,9 +35,24 @@ typedef struct		s_data
 	long			time_to_die;
 	long			time_to_eat;
 	long			time_to_sleep;
+	int				max_meals;
+	long			start_time;
 	pthread_mutex_t	*forks;
 	t_philosopher	*philosophers;	
 }					t_data;
 
+typedef struct		s_philo_args
+{
+	t_philosopher	*philo;
+	t_data			*data;
+}					t_philo_args;
+
+void	print_return(char *str);
+void	print_exit(t_data *data, char *str);
+void	*philosopher_routine(void *arg);
+long	get_current_time(void);
+int		init_data(t_data *data, int ac, char **av);
+void	clean_up(t_data *data);
+int		main(int ac, char **av);
 
 #endif

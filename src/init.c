@@ -6,7 +6,7 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/27 18:02:25 by erian             #+#    #+#             */
-/*   Updated: 2024/09/28 10:25:05 by erian            ###   ########.fr       */
+/*   Updated: 2024/09/28 18:17:43 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,7 +42,7 @@ long	get_current_time(void)
 	return((time.tv_sec * 1e3) + (time.tv_usec / 1e3));
 }
 
-int	init_philosophers(t_data *data)
+static int	init_philosophers(t_data *data)
 {
 	int	i;
 
@@ -59,7 +59,7 @@ int	init_philosophers(t_data *data)
 	return (0);
 }
 
-int	init_forks(t_data *data)
+static int	init_forks(t_data *data)
 {
 	int	i;
 
@@ -85,9 +85,13 @@ int	init_data(t_data *data, int ac, char **av)
 	if (ac < 5 || ac > 6)
 		return (1);
 	data->ph_nbr = (int)cstm_atoi(av[1]);
-	data->time_to_die = cstm_atoi(av[2]);
-	data->time_to_eat = cstm_atoi(av[3]);
-	data->time_to_sleep = cstm_atoi(av[4]);
+	data->time_to_die = cstm_atoi(av[2]) * 1e3;
+	data->time_to_eat = cstm_atoi(av[3]) * 1e3;
+	data->time_to_sleep = cstm_atoi(av[4]) * 1e3;
+	data->start_time = get_current_time();
+	data->max_meals = -1;
+	if (ac == 6)
+		data->max_meals = (int)cstm_atoi(av[5]);
 	if (data->time_to_die <= 0 || data->time_to_eat <= 0 || data->time_to_sleep <= 0)
 		return (1);
 	if (init_forks(data))
