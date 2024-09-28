@@ -6,13 +6,13 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/24 11:02:19 by erian             #+#    #+#             */
-/*   Updated: 2024/09/27 18:00:35 by erian            ###   ########.fr       */
+/*   Updated: 2024/09/28 10:26:36 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
-static void	clean_up(t_data *data)
+void	clean_up(t_data *data)
 {
 	int	i;
 
@@ -29,24 +29,20 @@ int	main(int ac, char **av)
 	int		i;
 
 	if (init_data(&data, ac, av))
-		print_return("Error initializing data\n");
+		print_exit(NULL, "Error initializing data\n");
 	i = -1;
 	while (++i < data.ph_nbr)
 	{
 		if (pthread_create(&data.philosophers[i].thread, NULL, philosopher_routine, &data.philosophers[i]))
 		{
-			printf("Error creating thread for philosopher %d\n", i + 1);
-			return (1);
+			while (--i >= 0)
+				pthread_join(data.philosophers[i].thread, NULL);
+			print_exit(data, "Error creating thread for philosopher\n");
 		}
 	}
 	i = -1;
 	while (++i < data.ph_nbr)
-	{
 		if (pthread_join(data.philosophers[i].thread, NULL))
-		{
-			printf("Error joining thread for philosopher %d\n", i + 1);
-			return (1);
-		}
-	}
+			print_exit(data, "Error joining thread for philosopher\n");
 	clean_up(&data);
 }

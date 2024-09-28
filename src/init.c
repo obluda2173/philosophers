@@ -6,7 +6,7 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/27 18:02:25 by erian             #+#    #+#             */
-/*   Updated: 2024/09/27 18:17:47 by erian            ###   ########.fr       */
+/*   Updated: 2024/09/28 10:25:05 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,16 +22,16 @@ static long	cstm_atoi(const char *str)
 	if (*str == '+')
 		str++;
 	else if (*str == '-') 
-		print_exit("Invalid number.\n");
+		print_exit(NULL, "Invalid number.\n");
 	if (!(*str >= '0' && *str <= '9'))
-		print_exit("Invalid number.\n");
+		print_exit(NULL, "Invalid number.\n");
 	while (*str >= '0' && *str <= '9')
 	{
 		result = result * 10 + (*str - '0');
 		str++;
 	}
 	if (result > INT_MAX)
-		print_exit("Too large number.\n");
+		print_exit(NULL, "Too large number.\n");
 	return (result);
 }
 long	get_current_time(void)
@@ -68,8 +68,15 @@ int	init_forks(t_data *data)
 		return (1);
 	i = -1;
 	while (++i < data->ph_nbr)
+	{
 		if (pthread_mutex_init(&data->forks[i], NULL))
+		{
+			while (--i >= 0)
+				pthread_mutex_destroy(&data->forks[i]);
+			free(data->forks);
 			return (1);
+		}
+	}
 	return (0);
 }
 
@@ -83,7 +90,12 @@ int	init_data(t_data *data, int ac, char **av)
 	data->time_to_sleep = cstm_atoi(av[4]);
 	if (data->time_to_die <= 0 || data->time_to_eat <= 0 || data->time_to_sleep <= 0)
 		return (1);
-	if (init_forks(data) || init_philosophers(data))
+	if (init_forks(data))
 		return (1);
+	if (init_philosophers(data))
+	{
+		free(data->forks);
+		return (1);
+	}
 	return (0);
 }

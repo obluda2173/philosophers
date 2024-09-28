@@ -6,7 +6,7 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/24 11:03:28 by erian             #+#    #+#             */
-/*   Updated: 2024/09/27 18:13:38 by erian            ###   ########.fr       */
+/*   Updated: 2024/09/28 10:18:24 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,7 +22,8 @@
 #include <errno.h>
 
 void	print_return(char *str);
-void	print_exit(char *str);
+void	print_exit(t_data *data, char *str);
+void	clean_up(t_data *data);
 int		main(int ac, char **av);
 
 typedef	struct	s_philosopher

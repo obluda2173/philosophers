@@ -6,20 +6,16 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/27 17:57:54 by erian             #+#    #+#             */
-/*   Updated: 2024/09/27 18:15:03 by erian            ###   ########.fr       */
+/*   Updated: 2024/09/28 10:27:08 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
-void	print_return(char *str)
+void	print_exit(t_data *data, char *str)
 {
 	printf("%s", str);
-	return (1);
-}
-
-void	print_exit(char *str)
-{
-	printf("%s", str);
+	if (data)
+		clean_up(data);
 	exit(1);
 }
