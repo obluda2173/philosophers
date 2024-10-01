@@ -6,7 +6,7 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/28 10:35:35 by erian             #+#    #+#             */
-/*   Updated: 2024/10/01 15:06:06 by erian            ###   ########.fr       */
+/*   Updated: 2024/10/01 18:03:05 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -35,40 +35,33 @@ static int	eat(t_ph *ph, int target_id)
 {
 	if (ph->meals == ph->data->max_meals || is_dead(ph))
 		return (0);
-	else
-	{
-		pthread_mutex_lock(&ph->data->mutex);
-		ph->forks_taken = true;
-		ph->data->ph_arr[target_id].forks_taken = true;
-		print_state(FORK, ph->id + 1, ph);
-		pthread_mutex_unlock(&ph->data->mutex);
-		print_state(EATING, ph->id + 1, ph);
-		ph->meals++;
-		cstm_usleep(ph->data->time_to_eat);
-		ph->time_last_meal = get_current_time();
-		pthread_mutex_lock(&ph->data->mutex);
-		ph->forks_taken = false;
-		ph->data->ph_arr[target_id].forks_taken = false;
-		pthread_mutex_unlock(&ph->data->mutex);
-		ph->state = SLEEPING;
-		return (1);
-	}
+	pthread_mutex_lock(&ph->data->mutex);
+	ph->forks_taken = true;
+	ph->data->ph_arr[target_id].forks_taken = true;
+	print_state(FORK, ph->id + 1, ph);
+	pthread_mutex_unlock(&ph->data->mutex);
+	print_state(EATING, ph->id + 1, ph);
+	ph->meals++;
+	cstm_usleep(ph->data->time_to_eat);
+	ph->time_last_meal = get_current_time();
+	pthread_mutex_lock(&ph->data->mutex);
+	ph->forks_taken = false;
+	ph->data->ph_arr[target_id].forks_taken = false;
+	pthread_mutex_unlock(&ph->data->mutex);
+	ph->state = SLEEPING;
 	return (1);
 }
 
 static int	eating_attempt(t_ph *ph)
 {
 	ph->target_id = forks_are_free(ph, ph->data->ph_arr);
-	if (ph->target_id >= 0
-		&& ph->target_id < ph->data->ph_nbr)
+	if (ph->target_id >= 0 && ph->target_id < ph->data->ph_nbr)
 	{
 		if (!eat(ph, ph->target_id) || is_dead(ph))
 			return (0);
 		ph->state = SLEEPING;
 	}
-	if (is_dead(ph))
-		return (0);
-	return (1);
+	return (!is_dead(ph));
 }
 
 static int	one_philo(t_ph *ph)

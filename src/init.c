@@ -6,7 +6,7 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/27 18:02:25 by erian             #+#    #+#             */
-/*   Updated: 2024/10/01 11:47:03 by erian            ###   ########.fr       */
+/*   Updated: 2024/10/01 17:55:41 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,10 +24,7 @@ static long	cstm_atoi(const char *str, t_data *data)
 	else if (*str == '-')
 		print_free_exit("Invalid number.\n", data);
 	while (*str >= '0' && *str <= '9')
-	{
-		result = result * 10 + (*str - '0');
-		str++;
-	}
+		result = result * 10 + (*str++ - '0');
 	if (result > INT_MAX || result == 0)
 		print_free_exit("Invalid number.\n", data);
 	return (result);

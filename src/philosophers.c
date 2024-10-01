@@ -6,7 +6,7 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/24 11:02:19 by erian             #+#    #+#             */
-/*   Updated: 2024/10/01 11:50:43 by erian            ###   ########.fr       */
+/*   Updated: 2024/10/01 17:58:40 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -15,8 +15,7 @@
 void	print_free_exit(char *str, t_data *data)
 {
 	printf("%s", str);
-	if (data)
-		free(data);
+	free(data);
 	exit(1);
 }
 
@@ -42,7 +41,6 @@ void	print_state(int state, int index, t_ph *ph)
 			printf("State is not assigned\n");
 	}
 	pthread_mutex_unlock(&ph->data->write);
-	return ;
 }
 
 int	main(int ac, char **av)
