@@ -6,91 +6,107 @@
 /*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/09/28 10:35:35 by erian             #+#    #+#             */
-/*   Updated: 2024/09/29 17:33:07 by erian            ###   ########.fr       */
+/*   Updated: 2024/10/01 15:06:06 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
-static void	take_forks_and_eat(t_philosopher *philo, t_data *data)
+static int	forks_are_free(t_ph *ph, t_ph *ph_arr)
 {
-	long	time;
+	int	result;
 
-	time = get_current_time() - data->start_time;
-	if (philo->id % 2 == 0)
+	result = -1;
+	pthread_mutex_lock(&ph->data->mutex);
+	if (ph->id == 0 && !ph[0].forks_taken)
 	{
-		pthread_mutex_lock(&data->forks[philo->id - 1]);
-		printf("%ld %d has taken a fork\n", time, philo->id);
-		pthread_mutex_lock(&data->forks[philo->id % data->ph_nbr]);
-		printf("%ld %d has taken a fork\n", time, philo->id);
+		if ((!ph_arr[1].forks_taken))
+			result = 1;
+		else if (!ph_arr[ph->data->ph_nbr - 1].forks_taken)
+			result = ph->data->ph_nbr - 1;
 	}
+	else if (!ph->forks_taken && (!ph_arr[ph->id - 1].forks_taken))
+		result = ph->id - 1;
+	pthread_mutex_unlock(&ph->data->mutex);
+	return (result);
+}
+
+static int	eat(t_ph *ph, int target_id)
+{
+	if (ph->meals == ph->data->max_meals || is_dead(ph))
+		return (0);
 	else
 	{
-		pthread_mutex_lock(&data->forks[philo->id % data->ph_nbr]);
-		printf("%ld %d has taken a fork\n", time, philo->id);
-		pthread_mutex_lock(&data->forks[philo->id - 1]);
-		printf("%ld %d has taken a fork\n", time, philo->id);
+		pthread_mutex_lock(&ph->data->mutex);
+		ph->forks_taken = true;
+		ph->data->ph_arr[target_id].forks_taken = true;
+		print_state(FORK, ph->id + 1, ph);
+		pthread_mutex_unlock(&ph->data->mutex);
+		print_state(EATING, ph->id + 1, ph);
+		ph->meals++;
+		cstm_usleep(ph->data->time_to_eat);
+		ph->time_last_meal = get_current_time();
+		pthread_mutex_lock(&ph->data->mutex);
+		ph->forks_taken = false;
+		ph->data->ph_arr[target_id].forks_taken = false;
+		pthread_mutex_unlock(&ph->data->mutex);
+		ph->state = SLEEPING;
+		return (1);
 	}
-	printf("%ld %d is eating\n", time, philo->id);
-	philo->last_meal_time = get_current_time();
-	philo->meals++;
-	usleep(data->time_to_eat * 1000);
-	pthread_mutex_unlock(&data->forks[philo->id % data->ph_nbr]);
-	pthread_mutex_unlock(&data->forks[philo->id - 1]);
+	return (1);
 }
 
-static void	sleep_and_think(t_philosopher *philo, t_data *data)
+static int	eating_attempt(t_ph *ph)
 {
-	long	time;
-
-	time = get_current_time() - data->start_time;
-	printf("%ld %d is sleeping\n", time, philo->id);
-	usleep(data->time_to_sleep * 1000);
-	printf("%ld %d is thinking\n", time, philo->id);
-}
-
-static int	check_death(t_philosopher *philo, t_data *data)
-{
-	if ((get_current_time() - philo->last_meal_time) > data->time_to_die)
+	ph->target_id = forks_are_free(ph, ph->data->ph_arr);
+	if (ph->target_id >= 0
+		&& ph->target_id < ph->data->ph_nbr)
 	{
-		printf("%ld %d died\n", get_current_time() - data->start_time, philo->id);
+		if (!eat(ph, ph->target_id) || is_dead(ph))
+			return (0);
+		ph->state = SLEEPING;
+	}
+	if (is_dead(ph))
+		return (0);
+	return (1);
+}
+
+static int	one_philo(t_ph *ph)
+{
+	if (ph->data->ph_nbr == 1)
+	{
+		cstm_usleep(ph->data->time_to_die);
+		printf("Not enough forks.\nPhilosopher died of starvation.\n");
 		return (1);
 	}
 	return (0);
 }
 
-static void	handle_single_philo(t_philosopher *philo, t_data *data)
+void	*process(void *arg)
 {
-	long	time;
+	t_ph	*ph;
 
-	time = get_current_time() - data->start_time;
-	printf("%ld %d has taken a fork\n", time, philo->id);
-	usleep(data->time_to_die * 1000);
-	printf("%ld %d died\n", get_current_time() - data->start_time, philo->id);
-	pthread_exit(NULL);
-}
-
-void	*philosopher_routine(void *arg)
-{
-	t_philo_args	*args;
-	t_philosopher	*philo;
-	t_data			*data;
-
-	args = (t_philo_args *)arg;
-	philo = args->philo;
-	data = args->data;
-	if (data->ph_nbr == 1)
-		handle_single_philo(philo, data);
-	if (philo->id % 2 == 0)
-		usleep(100);
+	ph = (t_ph *)arg;
+	if (one_philo(ph))
+		return (NULL);
+	if (ph->id % 2 == 0)
+		cstm_usleep(1);
 	while (1)
 	{
-		take_forks_and_eat(philo, data);
-		sleep_and_think(philo, data);
-		if (check_death(philo, data))
-			pthread_exit(NULL);
-		if (data->max_meals != -1 && philo->meals >= data->max_meals)
-			break ;
+		if (check_death(ph))
+			return (NULL);
+		if (ph->state == THINKING && (!eating_attempt(ph)))
+			return (NULL);
+		else if (ph->state == SLEEPING && !is_dead(ph))
+		{
+			print_state(SLEEPING, ph->id + 1, ph);
+			cstm_usleep(ph->data->time_to_sleep);
+			if (is_dead(ph))
+				return (NULL);
+			ph->state = THINKING;
+			print_state(THINKING, ph->id + 1, ph);
+			cstm_usleep(1);
+		}
 	}
 	return (NULL);
 }
