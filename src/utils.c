@@ -3,53 +3,56 @@
 /*                                                        :::      ::::::::   */
 /*   utils.c                                            :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
+/*   By: erian <erian@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/09/30 18:10:02 by erian             #+#    #+#             */
-/*   Updated: 2024/10/01 15:06:32 by erian            ###   ########.fr       */
+/*   Created: 2024/12/26 14:23:31 by erian             #+#    #+#             */
+/*   Updated: 2024/12/26 17:48:17 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
-size_t	get_current_time(void)
+void	print_exit(char *str)
 {
-	struct timeval	time;
-
-	gettimeofday(&time, NULL);
-	return ((time.tv_sec * 1000) + (time.tv_usec / 1000));
+	printf("%s\n", str);
+	exit(1);
 }
 
-void	cstm_usleep(size_t ms)
+long long	timestamp(void)
 {
-	size_t	start;
+	struct timeval	t;
 
-	start = get_current_time();
-	while ((get_current_time() - start) < ms)
-		usleep(ms);
+	gettimeofday(&t, NULL);
+	return ((t.tv_sec * 1000) + (t.tv_usec / 1000));
 }
 
-int	is_dead(t_ph *ph)
+long long	td(long long past, long long pres)
 {
-	if ((get_current_time() - ph->time_last_meal) > ph->data->time_to_die)
+	return (pres - past);
+}
+
+void	smart_sleep(long long time, t_data *data)
+{
+	long long	i;
+
+	i = timestamp();
+	while (data->not_died)
 	{
-		pthread_mutex_lock(&ph->data->mutex);
-		print_state(DEAD, ph->id + 1, ph);
-		ph->data->all_alive = false;
-		pthread_mutex_unlock(&ph->data->mutex);
-		return (1);
+		if (td(i, timestamp()) >= time)
+			break ;
+		usleep(10);
 	}
-	return (0);
 }
 
-int	check_death(t_ph *ph)
+void	action_print(t_data *data, int id, char *str)
 {
-	pthread_mutex_lock(&ph->data->mutex);
-	if (!ph->data->all_alive)
+	pthread_mutex_lock(&(data->writing));
+	if (data->not_died)
 	{
-		pthread_mutex_unlock(&ph->data->mutex);
-		return (1);
+		printf("%lli ", timestamp() - data->first_timestamp);
+		printf("%i ", id + 1);
+		printf("%s\n", str);
 	}
-	pthread_mutex_unlock(&ph->data->mutex);
-	return (0);
+	pthread_mutex_unlock(&(data->writing));
+	return ;
 }

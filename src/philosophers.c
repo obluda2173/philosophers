@@ -3,64 +3,92 @@
 /*                                                        :::      ::::::::   */
 /*   philosophers.c                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
+/*   By: erian <erian@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/09/24 11:02:19 by erian             #+#    #+#             */
-/*   Updated: 2024/10/01 17:58:40 by erian            ###   ########.fr       */
+/*   Created: 2024/12/26 10:54:22 by erian             #+#    #+#             */
+/*   Updated: 2024/12/26 17:48:12 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
 
-void	print_free_exit(char *str, t_data *data)
+static int	cstm_atoi(const char *str)
 {
-	printf("%s", str);
-	free(data);
-	exit(1);
+	long	result;
+
+	result = 0;
+	while ((*str >= 9 && *str <= 13) || *str == 32)
+		str++;
+	if (*str == '+')
+		str++;
+	else if (*str == '-')
+		print_exit("Invalid arguments");
+	while (*str >= '0' && *str <= '9')
+		result = result * 10 + (*str++ - '0');
+	if (result > INT_MAX || result == 0)
+		print_exit("Invalid arguments");
+	return ((int)result);
 }
 
-void	print_state(int state, int index, t_ph *ph)
+static void	init_mutex(t_data *data)
 {
-	size_t	time;
+	int	i;
 
-	pthread_mutex_lock(&ph->data->write);
-	time = get_current_time() - ph->data->time_begin;
-	if (ph->data->all_alive)
+	i = data->philos_nbr;
+	while (--i >= 0)
 	{
-		if (state == EATING)
-			printf("%zu %i is eating\n", time, index);
-		else if (state == SLEEPING)
-			printf("%zu %i is sleeping\n", time, index);
-		else if (state == THINKING)
-			printf("%zu %i is thinking\n", time, index);
-		else if (state == FORK)
-			printf("%zu %i has taken fork\n", time, index);
-		else if (state == DEAD)
-			printf("%zu %i is dead\n", time, index);
-		else if (state == 0)
-			printf("State is not assigned\n");
+		if (pthread_mutex_init(&(data->forks[i]), NULL))
+			print_exit("Error while initialising mutex");
 	}
-	pthread_mutex_unlock(&ph->data->write);
+	if (pthread_mutex_init(&(data->writing), NULL))
+		print_exit("Error while initialising mutex");
+	if (pthread_mutex_init(&(data->meal_check), NULL))
+		print_exit("Error while initialising mutex");
+}
+
+static int	init_philos(t_data *data)
+{
+	int	i;
+
+	i = data->philos_nbr;
+	while (--i >= 0)
+	{
+		data->philo[i].id = i;
+		data->philo[i].ate_nbr = 0;
+		data->philo[i].left_fork_id = i;
+		data->philo[i].right_fork_id = (i + 1) % data->philos_nbr;
+		data->philo[i].last_meal_time = 0;
+		data->philo[i].data = data;
+	}
+	return (0);
+}
+
+static void	parse(t_data *data, int ac, char **av)
+{
+	data->philos_nbr = cstm_atoi(av[1]);
+	data->time_to_die = cstm_atoi(av[2]);
+	data->time_to_eat = cstm_atoi(av[3]);
+	data->time_to_sleep = cstm_atoi(av[4]);
+	data->all_ate = false;
+	data->not_died = true;
+	if (ac == 6)
+		data->must_eat_nbr = cstm_atoi(av[5]);
+	else
+		data->must_eat_nbr = -1;
+	if (data->philos_nbr > 200)
+		print_exit("Incorect number of philosophers");
+	init_mutex(data);
+	init_philos(data);
 }
 
 int	main(int ac, char **av)
 {
-	t_data	*data;
+	t_data	data;
 
-	data = (t_data *)malloc(sizeof(t_data));
-	if (!data)
-		print_free_exit("Memory allocation error.\n", NULL);
-	if (init_data(ac, av, data))
-	{
-		data->ph_arr = (t_ph *)malloc(sizeof(t_ph));
-		if (!data->ph_arr)
-			print_free_exit("Memory allocation error.\n", data);
-		switch_mutex(data, true);
-		create_threads(data, data->ph_arr);
-		join_threads(data, data->ph_arr);
-		switch_mutex(data, false);
-		free(data->ph_arr);
-	}
-	free(data);
+	if (ac != 5 && ac != 6)
+		return (printf("Wrong amount of arguments\n"), 0);
+	parse(&data, ac, av);
+	if (launcher(&data))
+		return (printf("Error creating the threads\n"), 0);
 	return (0);
 }

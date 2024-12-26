@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   philosophers.h                                     :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: erian <erian@student.42>                   +#+  +:+       +#+        */
+/*   By: erian <erian@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/09/24 11:03:28 by erian             #+#    #+#             */
-/*   Updated: 2024/10/01 11:49:56 by erian            ###   ########.fr       */
+/*   Created: 2024/12/26 10:43:54 by erian             #+#    #+#             */
+/*   Updated: 2024/12/26 17:45:23 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,75 +14,51 @@
 # define PHILOSOPHERS_H
 
 # include <stdio.h>
-# include <stdlib.h>
 # include <unistd.h>
-# include <pthread.h>
-# include <sys/time.h>
+# include <stdlib.h>
 # include <limits.h>
-# include <errno.h>
+# include <string.h>
+# include <pthread.h>
 # include <stdbool.h>
+# include <sys/time.h>
 
-typedef struct s_data	t_data;
+struct	s_data;
 
-typedef struct s_ph
+typedef struct s_philo
 {
-	int			id;
-	int			state;
-	int			meals;
-	int			target_id;
-	bool		forks_taken;
-	size_t		time_last_meal;
-	pthread_t	thread;
-	t_data		*data;
-}				t_ph;
-
-typedef enum e_types
-{
-	EATING		=	1,
-	SLEEPING	=	2,
-	THINKING	=	3,
-	DEAD		=	4,
-	FORK		=	5,
-}				t_types;
+	int				id;
+	int				ate_nbr;
+	int				left_fork_id;
+	int				right_fork_id;
+	long long		last_meal_time;
+	pthread_t		thread_id;
+	struct s_data	*data;
+}					t_philo;
 
 typedef struct s_data
 {
-	int				ph_nbr;
-	int				max_meals;
-	unsigned long	exec_usec;
-	bool			all_alive;
-	size_t			time_to_die;
-	size_t			time_to_eat;
-	size_t			time_to_sleep;
-	size_t			time_begin;
-	t_ph			*ph_arr;
-	pthread_mutex_t	mutex;
-	pthread_mutex_t	write;
+	int				philos_nbr;
+	int				time_to_die;
+	int				time_to_eat;
+	int				time_to_sleep;
+	int				must_eat_nbr;
+	bool			all_ate;
+	bool			not_died;
+	t_philo			philo[250];
+	long long		first_timestamp;
+	pthread_mutex_t	forks[250];
+	pthread_mutex_t	writing;
+	pthread_mutex_t	meal_check;
 }					t_data;
 
-/* 
-**	utils.c 
-*/
-size_t	get_current_time(void);
-int		check_death(t_ph *ph);
-int		is_dead(t_ph *ph);
-void	cstm_usleep(size_t ms);
-/* 
-**	process.c 
-*/
-void	*process(void *arg);
-/* 
-**	init.c 
-*/
-int		init_data(int ac, char **av, t_data *data);
-void	switch_mutex(t_data *data, bool state);
-void	create_threads(t_data *data, t_ph *phs);
-void	join_threads(t_data *data, t_ph *phs);
-/* 
-**	philosophers.c 
-*/
-void	print_free_exit(char *str, t_data *data);
-void	print_state(int state, int index, t_ph *ph);
-int		main(int ac, char **av);
+int			main(int ac, char **av);
+
+bool		launcher(t_data *data);
+
+void		print_exit(char *str);
+long long	timestamp(void);
+long long	td(long long past, long long pres);
+void		smart_sleep(long long time, t_data *data);
+void		action_print(t_data *data, int id, char *str);
 
 #endif
