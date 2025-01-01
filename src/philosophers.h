@@ -6,7 +6,7 @@
 /*   By: erian <erian@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/26 10:43:54 by erian             #+#    #+#             */
-/*   Updated: 2024/12/26 17:45:23 by erian            ###   ########.fr       */
+/*   Updated: 2024/12/30 15:46:04 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,10 +55,10 @@ int			main(int ac, char **av);
 
 bool		launcher(t_data *data);
 
-void		print_exit(char *str);
 long long	timestamp(void);
-long long	td(long long past, long long pres);
 void		smart_sleep(long long time, t_data *data);
 void		action_print(t_data *data, int id, char *str);
+void		exit_launcher(t_data *data, t_philo *philos);
+bool		socrates(t_data *data);
 
 #endif

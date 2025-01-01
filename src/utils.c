@@ -6,17 +6,11 @@
 /*   By: erian <erian@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/26 14:23:31 by erian             #+#    #+#             */
-/*   Updated: 2024/12/26 17:48:17 by erian            ###   ########.fr       */
+/*   Updated: 2024/12/30 16:42:40 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "philosophers.h"
-
-void	print_exit(char *str)
-{
-	printf("%s\n", str);
-	exit(1);
-}
 
 long long	timestamp(void)
 {
@@ -26,21 +20,23 @@ long long	timestamp(void)
 	return ((t.tv_sec * 1000) + (t.tv_usec / 1000));
 }
 
-long long	td(long long past, long long pres)
-{
-	return (pres - past);
-}
-
 void	smart_sleep(long long time, t_data *data)
 {
-	long long	i;
+	long long	start_time;
 
-	i = timestamp();
-	while (data->not_died)
+	start_time = timestamp();
+	while (1)
 	{
-		if (td(i, timestamp()) >= time)
+		pthread_mutex_lock(&(data->meal_check));
+		if (!data->not_died)
+		{
+			pthread_mutex_unlock(&(data->meal_check));
 			break ;
-		usleep(10);
+		}
+		pthread_mutex_unlock(&(data->meal_check));
+		if ((timestamp() - start_time) >= time)
+			break ;
+		usleep(100);
 	}
 }
 
@@ -55,4 +51,35 @@ void	action_print(t_data *data, int id, char *str)
 	}
 	pthread_mutex_unlock(&(data->writing));
 	return ;
+}
+
+void	exit_launcher(t_data *data, t_philo *philos)
+{
+	int	i;
+
+	i = -1;
+	while (++i < data->philos_nbr)
+		pthread_join(philos[i].thread_id, NULL);
+	i = -1;
+	while (++i < data->philos_nbr)
+		pthread_mutex_destroy(&(data->forks[i]));
+	pthread_mutex_destroy(&(data->writing));
+	pthread_mutex_destroy(&(data->meal_check));
+}
+
+bool	socrates(t_data *data)
+{
+	pthread_mutex_lock(&(data->meal_check));
+	if (data->philos_nbr == 1)
+	{
+		pthread_mutex_unlock(&(data->meal_check));
+		smart_sleep(data->time_to_die, data);
+		pthread_mutex_lock(&(data->writing));
+		printf("%lli %i died\n",
+			timestamp() - data->first_timestamp, data->philo[0].id + 1);
+		pthread_mutex_unlock(&(data->writing));
+		return (false);
+	}
+	pthread_mutex_unlock(&(data->meal_check));
+	return (true);
 }

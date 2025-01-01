@@ -6,7 +6,7 @@
 /*   By: erian <erian@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/26 10:54:22 by erian             #+#    #+#             */
-/*   Updated: 2024/12/26 17:48:12 by erian            ###   ########.fr       */
+/*   Updated: 2024/12/30 16:42:01 by erian            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,11 +22,17 @@ static int	cstm_atoi(const char *str)
 	if (*str == '+')
 		str++;
 	else if (*str == '-')
-		print_exit("Invalid arguments");
+	{
+		printf("Invalid arguments");
+		exit(1);
+	}
 	while (*str >= '0' && *str <= '9')
 		result = result * 10 + (*str++ - '0');
 	if (result > INT_MAX || result == 0)
-		print_exit("Invalid arguments");
+	{
+		printf("Invalid arguments");
+		exit(1);
+	}
 	return ((int)result);
 }
 
@@ -38,12 +44,17 @@ static void	init_mutex(t_data *data)
 	while (--i >= 0)
 	{
 		if (pthread_mutex_init(&(data->forks[i]), NULL))
-			print_exit("Error while initialising mutex");
+		{
+			printf("Error while initialising mutex");
+			exit(1);
+		}
 	}
-	if (pthread_mutex_init(&(data->writing), NULL))
-		print_exit("Error while initialising mutex");
-	if (pthread_mutex_init(&(data->meal_check), NULL))
-		print_exit("Error while initialising mutex");
+	if (pthread_mutex_init(&(data->writing), NULL)
+		|| pthread_mutex_init(&(data->meal_check), NULL))
+	{
+		printf("Error while initialising mutex");
+		exit(1);
+	}
 }
 
 static int	init_philos(t_data *data)
@@ -75,8 +86,12 @@ static void	parse(t_data *data, int ac, char **av)
 		data->must_eat_nbr = cstm_atoi(av[5]);
 	else
 		data->must_eat_nbr = -1;
-	if (data->philos_nbr > 200)
-		print_exit("Incorect number of philosophers");
+	if (data->philos_nbr > 200 || data->time_to_die < 60
+		|| data->time_to_eat < 60 || data->time_to_sleep < 60)
+	{
+		printf("Invalid arguments");
+		exit(1);
+	}
 	init_mutex(data);
 	init_philos(data);
 }

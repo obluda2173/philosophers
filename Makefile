@@ -4,7 +4,7 @@
 NAME		=	philo
 
 # Compiler and flags
-CC 			=	@cc
+CC 			=	@cc #-O0 -g3 -pthread -fsanitize=thread,undefined -fno-optimize-sibling-calls
 RM			=	@rm -f
 FLAGS		=	-Wall -Wextra -Werror 
 
